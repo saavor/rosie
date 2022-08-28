@@ -1,0 +1,12 @@
+# Project place file
+/rosie.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+# Selene roblox std
+roblox.yml
+
+# MacOS
+.DS_Store
