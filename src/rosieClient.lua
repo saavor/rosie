@@ -2,75 +2,69 @@
 -- part of the rosie framework
 -- written by nova
 
+local rosieClient = {}
+
+-- Services
 local RunService = game:GetService("RunService")
 
-local rosieClient = {}
-rosieClient.__index = rosieClient
+-- Module Scripts
+local rosieConfig = require(script.parent.rosieConfig)
 
-rosieClient.instance = nil
+local systems = {} -- Services table
+local modules = {} -- Modules table
 
-function rosieClient.new()
+rosieClient.systems = systems
+rosieClient.moodules = modules
 
-	-- Check if an instance was already created
-	if rosieClient.instance then
-		return error("[rosie] Only one instance can be created")
+local IsStarted = false
+
+function rosieClient.addSystems(systemsPath)
+	for _,system in ipairs(systemsPath:GetChildren()) do 
+		if not system:IsA("ModuleScript") then continue end
+		table.insert(systems, require(system))
 	end
-
-	local self = {
-		-- Define members of the instance here, even if they're `nil` by default.
-		systems = nil,
-		updateEvent = nil,
-		started = false,
-	}
-
-	-- Tell Lua to fall back to looking in MyClass.__index for missing fields.
-	setmetatable(self, rosieClient)
-
-	-- Initialize
-	rosieClient:_init()
-
-
-	return self
 end
 
-function rosieClient:_init()
-	print("Rosie vNIL")
-	rosieClient.instance = self
-	rosieClient.systems = {}
+function rosieClient.addModules(modulesPath)
+	for _,module in ipairs(modulesPath:GetChildren()) do 
+		if not module:IsA("ModuleScript") then continue end
+		table.insert(modules, require(module))
+	end
 end
 
-function rosieClient:start()
-	if self.started then
-		return warn("[rosie] Rosie already started")
+function rosieClient.Start()
+	if IsStarted then
+		return warn("[rosie] Already started")
 	end
 
-	self.started = true
-	
+	-- Print little message
+	print("rosie v" .. rosieConfig.version)
+
+
 	-- run system start functions
-	for _,system in ipairs(self.systems) do
-		system.start()
+	for _,system in ipairs(systems) do
+		if system.Start then
+			system.Start()
+		end
 	end
 
-	-- update services
+	-- Step services
 	RunService.Heartbeat:Connect(function ()
-		for _,system in ipairs(self.systems) do
-			if system.update then
-				system.update()
+		for _,system in ipairs(systems) do
+			if system.Step then
+				system.Step()
 			end
 		end
 	end)
-end
 
-function rosieClient:getInstance()
-	return self.instance
-end
-
-function rosieClient:addSystems(systemsPath)
-	for _,system in ipairs(systemsPath:GetChildren()) do 
-		if not system:IsA("ModuleScript") then continue end
-		table.insert(self.systems, require(system))
-	end
-	return self.systems
+	-- Update services
+	RunService.RenderStepped:Connect(function ()
+		for _,system in ipairs(systems) do
+			if system.Update then
+				system.Update()
+			end
+		end
+	end)
 end
 
 return rosieClient
