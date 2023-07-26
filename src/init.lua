@@ -46,7 +46,9 @@ function rosie.start()
             end
             
             RunService:BindToRenderStep(system.name, Enum.RenderPriority.Camera.Value-1, function (delta: number)
+                debug.profilebegin("rosie: " .. system.name .. ":update")
                 system.module:update(delta)
+                debug.profileend()
             end)
         end
         
