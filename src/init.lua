@@ -36,7 +36,7 @@ function rosie.start()
         
         -- run system start functions
         if system.module.start then
-            system.module:start()
+            task.spawn(system.module.start)
         end
         
         -- bind update functions
@@ -47,16 +47,19 @@ function rosie.start()
             
             RunService:BindToRenderStep(system.name, Enum.RenderPriority.Camera.Value-1, function (delta: number)
                 debug.profilebegin("rosie: " .. system.name .. ":update")
-                system.module:update(delta)
+                    system.module:update(delta)
                 debug.profileend()
             end)
         end
         
         -- bind tick functions
         if system.module.tick then
-            RunService.Heartbeat:Connect(function (delta: number)
-                system.module:tick(delta)
-            end)
+            RunService.Heartbeat:Connect(system.module.tick)
+        end
+
+        -- bind step functions
+        if system.module.step then
+            RunService.Stepped:Connect(system.module.step)
         end
         
     end
